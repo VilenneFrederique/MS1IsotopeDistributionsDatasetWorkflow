@@ -12,16 +12,16 @@ PyMSProcessing.excel_MS1_Isotope_Distributions(raw_file=raw_file_test, input_lis
 PyMSProcessing.JSON_MS1_Isotope_Distributions(raw_file=raw_file_test, input_list=input_list_test, output_file=output_file_test)
 ```
 
-raw_file: An mzML-file with MS1 spectra. 
+raw_file: An mzML-file with MS1 spectra. The PyMSProcessing script contains a function to extract MS1 spectra from an mzML-file called ms_level_filter, which returns the mzML-file filtered for the MSn spectra specified, which could be either MS1 spectra or MS2 spectra depending on the user-input. 
 
-input_list: The input list with the same format as the Test-list.xlsx in the Github Repository
+input_list: The input list with the same format as the Test-list.xlsx in the GitHub Repository
 
 output_file: The name of the output file.
 
 
 
 ## PyMSProcessing.py
-It contains code to extract information from mzML files. It contains a lot of useful functions that may be called separately, such as computing the monoisotopic mass and average mass of different charge states of a peptide given a peptide string, and selecting MS1 spectra from an mzML-file.
+It contains code to extract information from mzML files. It contains a lot of useful functions that may be called separately, such as computing the monoisotopic mass or average mass of different charge states of a peptide given a peptide string and selecting MS1 spectra from an mzML-file.
 
 
 
