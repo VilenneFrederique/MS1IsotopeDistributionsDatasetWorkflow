@@ -13,7 +13,9 @@ PyMSProcessing.JSON_MS1_Isotope_Distributions(raw_file=raw_file_test, input_list
 ```
 
 raw_file: An mzML-file with MS1 spectra. 
+
 input_list: The input list with the same format as the Test-list.xlsx in the Github Repository
+
 output_file: The name of the output file.
 
 
