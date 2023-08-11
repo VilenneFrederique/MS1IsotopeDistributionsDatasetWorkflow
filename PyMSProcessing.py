@@ -619,7 +619,6 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                     TheoreticalMonoIsotopicMass = Data_Temp_CS_Mod["TheoreticalMonoIsotopicMass"].iloc[0].item()
                     TheoreticalAverageMass = Data_Temp_CS_Mod["TheoreticalAverageMass"].iloc[0].item()
                     TheoreticalMZ = Data_Temp_CS_Mod["TheoreticalMZ"].iloc[0].item()
-                    ObservedMZ = Data_Temp_CS_Mod["ObservedMZ"].iloc[0].item()
                     Carbons = Data_Temp_CS_Mod["Carbons"].iloc[0].item()
                     Hydrogens = Data_Temp_CS_Mod["Hydrogens"].iloc[0].item()
                     Oxygens = Data_Temp_CS_Mod["Oxygens"].iloc[0].item()
@@ -632,7 +631,6 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                             "TheoreticalMonoIsotopicMass": TheoreticalMonoIsotopicMass,
                             "TheoreticalAverageMass": TheoreticalAverageMass,
                             "TheoreticalMZ": TheoreticalMZ,
-                            "ObservedMZ": ObservedMZ,
                             "Carbons": Carbons,
                             "Hydrogens": Hydrogens,
                             "Oxygens": Oxygens,
@@ -646,6 +644,7 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                     for index in range(len(Data_Temp_CS_Mod)):
                         # Extract all information
                         Spectrum = Data_Temp_CS_Mod["Spectrum"].iloc[index]
+                        ObservedMZ = Data_Temp_CS_Mod["ObservedMZ"].iloc[index].item()
                         RetentionTime = Data_Temp_CS_Mod["RetentionTime"].iloc[index].item()
                         TIC = Data_Temp_CS_Mod["TIC"].iloc[index].item()
                         Distribution = Data_Temp_CS_Mod["Distribution"].iloc[index]
@@ -684,6 +683,7 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                                      Data_Temp_CS_Mod["BRAINRelativeIsotopePeak6Intensity"].iloc[index].item()}
 
                         Temp_JSON_Dict_Modifications_To_append[Modification_Dict][Spectrum] = {
+                            "ObservedMZ": ObservedMZ,
                             "RetentionTime": RetentionTime,
                             "TIC": TIC,
                             "Distribution": Distribution,
@@ -706,7 +706,6 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                     TheoreticalMonoIsotopicMass = Data_Temp_CS_Mod["TheoreticalMonoIsotopicMass"].iloc[0].item()
                     TheoreticalAverageMass = Data_Temp_CS_Mod["TheoreticalAverageMass"].iloc[0].item()
                     TheoreticalMZ = Data_Temp_CS_Mod["TheoreticalMZ"].iloc[0].item()
-                    ObservedMZ = Data_Temp_CS_Mod["ObservedMZ"].iloc[0].item()
                     Carbons = Data_Temp_CS_Mod["Carbons"].iloc[0].item()
                     Hydrogens = Data_Temp_CS_Mod["Hydrogens"].iloc[0].item()
                     Oxygens = Data_Temp_CS_Mod["Oxygens"].iloc[0].item()
@@ -719,7 +718,6 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                             "TheoreticalMonoIsotopicMass": TheoreticalMonoIsotopicMass,
                             "TheoreticalAverageMass": TheoreticalAverageMass,
                             "TheoreticalMZ": TheoreticalMZ,
-                            "ObservedMZ": ObservedMZ,
                             "Carbons": Carbons,
                             "Hydrogens": Hydrogens,
                             "Oxygens": Oxygens,
@@ -733,6 +731,7 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                     for index in range(len(Data_Temp_CS_Mod)):
                         # Extract all information
                         Spectrum = Data_Temp_CS_Mod["Spectrum"].iloc[index]
+                        ObservedMZ = Data_Temp_CS_Mod["ObservedMZ"].iloc[index].item()
                         RetentionTime = Data_Temp_CS_Mod["RetentionTime"].iloc[index].item()
                         TIC = Data_Temp_CS_Mod["TIC"].iloc[index].item()
                         Distribution = Data_Temp_CS_Mod["Distribution"].iloc[index]
@@ -771,6 +770,7 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                                      Data_Temp_CS_Mod["BRAINRelativeIsotopePeak6Intensity"].iloc[index].item()}
 
                         Temp_JSON_Dict_Modifications_To_append[Modification_Dict][Spectrum] = {
+                            "ObservedMZ": ObservedMZ,
                             "RetentionTime": RetentionTime,
                             "TIC": TIC,
                             "Distribution": Distribution,
