@@ -5,10 +5,8 @@ Written by Vilenne Frédérique
 
 # Importing functions
 import os
-import pywt
 from pyopenms import *
 import pandas as pd
-from statsmodels import robust
 from numpy import max, transpose
 from numba import jit
 import regex
@@ -104,39 +102,6 @@ def mass_calculator(sequence: str, masses_type: str, cysteine_modified: int, met
                 return final_mass
         final_mass = sequence_mass + Water + Cysteine_mod * cysteine_modified + Methionine_mod * methionine_modified
         return final_mass
-
-
-## Performing wavelet denoising
-def wavelet_denoising(data, wavelet='db8'):
-    """
-    Perfoms Wavelet denoising according to https://doi.org/10.1002/pmic.200401261
-    :param data: A dataframe consisting of the peak information extracted from a spectrum using getPeaks.
-    :param wavelet: Dabauchies 8 wavelet
-    :return: A smoothed spectrum
-    """
-    max_level = pywt.swt_max_level(len(data["Intensity"]))
-    coefficients = pywt.swt(data=data["Intensity"], wavelet=wavelet, level=max_level, start_level=0, axis=-1, trim_approx=True, norm=True)
-    mad = data[["Intensity"]].apply(robust.mad)
-    mad = mad[0] * 6
-    coefficients[1:] = (pywt.threshold(i, value=mad, mode='hard') for i in coefficients[1:])
-    data["Intensity_denoised"] = pywt.iswt(coefficients, wavelet=wavelet)
-    return data
-
-
-## Performing wavelet denoising
-def median_baseline_removal(data, noise_estimator=2):
-    """
-    Perfoms a median baseline removal based on the PepList algorithm from article https://doi.org/10.2174%2F138920209789177638
-    :param data: A dataframe consisting of the peak information extracted from a spectrum using getPeaks.
-    :param noise_estimator: How much the median is multiplied by for noise estimation
-    :return: A baseline corrected spectrum
-    """
-    lower_limit = 360
-    upper_limit = 407
-    Jumps = 47
-    while upper_limit <= 1300:
-        data = data[data['MZ'].between(lower_limit, upper_limit)]
-    return data
 
 
 ## Simple mass calculator
@@ -396,61 +361,6 @@ def trypsin_digest(sequence):
     return Fragments
 
 
-def UPS_concentration_lookup(proteinID: str):
-    Concentrations = {
-        "P02768ups|ALBU_HUMAN_UPS Serum albumin (Chain 26-609) - Homo sapiens (Human)": 50,
-        "Q15843ups|NEDD8_HUMAN_UPS NEDD8 (Chain 1-81) - Homo sapiens (Human)": 0.5,
-        "P01112ups|RASH_HUMAN_UPS GTPase HRas (Chain 1-189) - Homo sapiens (Human)": 0.005,
-        "P04040ups|CATA_HUMAN_UPS Catalase (Chain 2-527) - Homo sapiens (Human)": 5,
-        "P02753ups|RETBP_HUMAN_UPS Retinol-binding protein 4 (Chain 19-201) - Homo sapiens (Human)": 0.5,
-        "P06396ups|GELS_HUMAN_UPS Gelsolin (Chain 28-782) - Homo sapiens (Human)": 0.005,
-        "P01375ups|TNFA_HUMAN_UPS Tumor necrosis factor, soluble form (Chain 77-233) - Homo sapiens (Human)": 0.0005,
-        "P15559ups|NQO1_HUMAN_UPS NAD(P)H dehydrogenase [quinone] 1 (Chain 2-274) - Homo sapiens (Human)": 5,
-        "Q06830ups|PRDX1_HUMAN_UPS Peroxiredoxin 1 (Chain 2-199) - Homo sapiens (Human)": 5,
-        "P00167ups|CYB5_HUMAN_UPS Cytochrome b5 (Chain 1-134, N-terminal His tag) - Homo sapiens (Human)": 5,
-        "P06732ups|KCRM_HUMAN_UPS Creatine kinase M-type (Chain 1-381) - Homo sapiens (Human)": 0.5,
-        "P02741ups|CRP_HUMAN_UPS C-reactive protein (Chain 19-224) - Homo sapiens (Human)": 0.0005,
-        "P61626ups|LYSC_HUMAN_UPS Lysozyme C (Chain 19-148) - Homo sapiens (Human)": 0.5,
-        "P16083ups|NQO2_HUMAN_UPS Ribosyldihydronicotinamide dehydrogenase [quinone] (Chain 2-231) - Homo sapiens (Human)": 0.5,
-        "P10145ups|IL8_HUMAN_UPS Interleukin-8, IL-8 (Chain 28-99) - Homo sapiens (Human)": 0.0005,
-        "P61769ups|B2MG_HUMAN_UPS Beta-2-microglobulin (Chain 21-119) - Homo sapiens (Human)": 0.05,
-        "P02144ups|MYG_HUMAN_UPS Myoglobin (Chain 2-154) - Homo sapiens (Human)": 5,
-        "P08263ups|GSTA1_HUMAN_UPS Glutathione S-transferase A1 (Chain 2-222) - Homo sapiens (Human)": 0.05,
-        "P55957ups|BID_HUMAN_UPS BH3-interacting domain death agonist (Chain 1-195) - Homo sapiens (Human)": 0.05,
-        "P00709ups|LALBA_HUMAN_UPS Alpha-lactalbumin (Chain 20-142) - Homo sapiens (Human)": 0.05,
-        "P69905ups|HBA_HUMAN_UPS Hemoglobin subunit alpha (Chain 2-142) - Homo sapiens (Human)": 50,
-        "P01344ups|IGF2_HUMAN_UPS Insulin-like growth factor II (Chain 25-91) - Homo sapiens (Human)": 0.05,
-        "P00915ups|CAH1_HUMAN_UPS Carbonic anhydrase 1 (Chain 2-261) - Homo sapiens (Human)": 50,
-        "P08758ups|ANXA5_HUMAN_UPS Annexin A5 (Chain 2-320) - Homo sapiens (Human)": 0.0005,
-        "P00918ups|CAH2_HUMAN_UPS Carbonic anhydrase 2 (Chain 2-260) - Homo sapiens (Human)": 50,
-        "P62937ups|PPIA_HUMAN_UPS Peptidyl-prolyl cis-trans isomerase A (Chain 1-165, N terminal His tag)- Homo sapiens (Human)": 5,
-        "P00441ups|SODC_HUMAN_UPS Superoxide dismutase [Cu-Zn] (Chain 2-154) - Homo sapiens (Human)": 0.0005,
-        "P05413ups|FABPH_HUMAN_UPS Fatty acid-binding protein, heart (Chain 2-133) - Homo sapiens (Human)": 0.0005,
-        "O00762ups|UBE2C_HUMAN_UPS Ubiquitin-conjugating enzyme E2 C (Chain 1-179, N-terminal His tag)- Homo sapiens (Human)": 0.005,
-        "P41159ups|LEP_HUMAN_UPS Leptin (Chain 22-167) - Homo sapiens (Human)": 50,
-        "P02788ups|TRFL_HUMAN_UPS Lactotransferrin (Chain 20-710) - Homo sapiens (Human)": 0.0005,
-        "P09211ups|GSTP1_HUMAN_UPS Glutathione S-transferase P (Chain 2-210) - Homo sapiens (Human)": 0.05,
-        "P01031ups|CO5_HUMAN_UPS Complement C5 (C5a anaphylatoxin) (Chain 678-751) - Homo sapiens (Human)": 50,
-        "P10636-8ups|TAU_HUMAN_UPS Microtubule-associated protein tau {Isoform Tau-F (Tau-4)} (Chain 2-441) - Homo sapiens (Human)": 0.0005,
-        "P01133ups|EGF_HUMAN_UPS Pro-Epidermal growth factor (EGF) (Chain 971-1023) - Homo sapiens (Human)": 5,
-        "P63165ups|SUMO1_HUMAN_UPS Small ubiquitin-related modifier 1 (Chain 1-97, N-terminal GST tag) - Homo sapiens (Human)": 5,
-        "P51965ups|UB2E1_HUMAN_UPS Ubiquitin-conjugating enzyme E2 E1 (Chain 1-193, N terminal His tag)- Homo sapiens (Human)": 0.005,
-        "P12081ups|SYHC_HUMAN_UPS Histidyl-tRNA synthetase, cytoplasmic (Chain 1-509, C terminal His tag) - Homo sapiens (Human)": 0.5,
-        "P99999ups|CYC_HUMAN_UPS Cytochrome c (Chain 2-105) - Homo sapiens (Human)": 0.005,
-        "P02787ups|TRFE_HUMAN_UPS Serotransferrin (Chain 20-698) - Homo sapiens (Human)": 0.005,
-        "P10599ups|THIO_HUMAN_UPS Thioredoxin (Chain 2-105, N-terminal His tag)- Homo sapiens (Human)": 0.05,
-        "P62988ups|UBIQ_HUMAN_UPS Ubiquitin (Chain 1-76, N-terminal His tag) - Homo sapiens (Human)": 50,
-        "P01008ups|ANT3_HUMAN_UPS Antithrombin-III (Chain 33-464) - Homo sapiens (Human)": 0.05,
-        "P01127ups|PDGFB_HUMAN_UPS Platelet-derived growth factor B chain (Chain 82-190) - Homo sapiens (Human)": 0.05,
-        "P68871ups|HBB_HUMAN_UPS Hemoglobin subunit beta (Chain 2-147) - Homo sapiens (Human)": 50,
-        "P63279ups|UBC9_HUMAN_UPS SUMO-conjugating enzyme UBC9 (Chain 1-158) - Homo sapiens (Human)": 0.5,
-        "O76070ups|SYUG_HUMAN_UPS Gamma-synuclein (Chain 1-127) - Homo sapiens (Human)": 0.05,
-        "P01579ups|IFNG_HUMAN_UPS Interferon Gamma (Chain 23-166) - Homo sapiens (Human)": 0.005
-    }
-    Concentration = Concentrations[proteinID]
-    return Concentration
-
-
 def excel_MS1_Isotope_Distributions(raw_file, input_list, output_file):
     # Storage
     Storage = []
@@ -531,12 +441,23 @@ def excel_MS1_Isotope_Distributions(raw_file, input_list, output_file):
         if 'ErrorTolerance' in input_data.columns:
             print("ErrorTolerance column is present")
             ErrorTolerance = input_data["ErrorTolerance"].iloc[index]
+            if pd.isna(ErrorTolerance) is True:
+                ErrorTolerance = 5
+                print("ErrorTolerance field was left blank, a default value of 5ppm was used.")
+            else:
+                print(f"ErrorTolerance of {ErrorTolerance}ppm was used.")
         else:
             print("ErrorTolerance column is absent, a default value of 5ppm will be used")
             ErrorTolerance = 5
+
         if 'MZ' in input_data.columns:
             print("MZ column is present")
             MZ = input_data["MZ"].iloc[index]
+            if pd.isna(MZ) is True:
+                MZ = TheoreticalMZ
+                print("MZ field was left blank, the monoisotopic mass was used.")
+            else:
+                print(f"MZ of {MZ}Da was used.")
         else:
             print("MZ column is absent, the theoretical MZ values will be used")
             MZ = TheoreticalMZ
@@ -634,7 +555,6 @@ def excel_MS1_Isotope_Distributions(raw_file, input_list, output_file):
 
     # Done processing
     print("Done Processing")
-
     return
 
 
