@@ -37,8 +37,8 @@ An example of an input list.
 
 
 
-## LICENSE.txt
-The software is available under GPLv3 software licensing. The LICENSE.txt file contains all terms and conditions. 
+## LICENSE
+The software is available under GPLv3 software licensing. The LICENSE file contains all the necessary information.
 
 
 
