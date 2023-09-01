@@ -577,8 +577,8 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
         # Filter the dataframe for the corresponding peptide
         Data_Peptide = Data[Data["PeptideSequence"] == Peptide]
 
-        # Extract all charge States
-        Charge_States = list(set(Data_Peptide["ChargeState"].tolist()))
+        # Extract all modifications
+        Modifications = list(set(Data_Peptide["Modifications"].tolist()))
 
         # Extract parameters from data frame
         PeptideLength = Data_Peptide["PeptideLength"].iloc[0].item()
@@ -587,206 +587,116 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
         JSON_Dict[Peptide] = {"Peptide Metadata": {"Peptide Length": PeptideLength}}
 
         # Temporary dictionary to store results in
-        Temp_JSON_Dict_CS = {}
+        Temp_JSON_Dict_Mod = {}
 
         # Iterate over all Charge States
-        for Charge_State in Charge_States:
+        for Modification in Modifications:
             # Temporary dictionary to store results in
-            Temp_JSON_Dict_Modifications = {}
+            Temp_JSON_Dict_Charge_States = {}
 
-            # Charge State string for dictionary
-            Charge_State_Dict = f"Charge State +{Charge_State}"
+            # Modification string for dictionary and filter dataframe for modifications
+            if pd.isna(Modification):
+                Modification_Dict = f"None"
+                Data_Peptide_Mod = Data_Peptide[Data_Peptide["Modifications"].isnull()]
+            else:
+                Modification_Dict = f"{Modification}"
+                Data_Peptide_Mod = Data_Peptide[Data_Peptide["Modifications"] == Modification]
 
-            # Filter the dataframe for the corresponding Charge State
-            Data_Peptide_CS = Data_Peptide[Data_Peptide["ChargeState"] == Charge_State]
-
-            # Extract all modifications
-            Modifications = list(set(Data_Peptide_CS["Modifications"].tolist()))
+            # Extract all charge states
+            Charge_States = list(set(Data_Peptide_Mod["ChargeState"].tolist()))
 
             # Iterate over all modifications
-            for Modification in Modifications:
-                # Filter the dataframe for the corresponding Modification, having to deal with NA (no modification) and modifications
-                Temp_JSON_Dict_Modifications_To_append = {}
+            for Charge_State in Charge_States:
 
-                if pd.isna(Modification):
-                    # Filter the dataframe for the corresponding Modification in case of NA (Modification Absent)
-                    Data_Temp_CS_Mod = Data_Peptide_CS[Data_Peptide_CS["Modifications"].isna()]
+                Data_Temp_Mod_CS = Data_Peptide_Mod[Data_Peptide_Mod["ChargeState"] == Charge_State]
 
-                    # Modification string for dictionary
-                    Modification_Dict = f"Modification: None"
+                # Extract information
+                TheoreticalMonoIsotopicMass = Data_Temp_Mod_CS["TheoreticalMonoIsotopicMass"].iloc[0].item()
+                TheoreticalAverageMass = Data_Temp_Mod_CS["TheoreticalAverageMass"].iloc[0].item()
+                TheoreticalMZ = Data_Temp_Mod_CS["TheoreticalMZ"].iloc[0].item()
+                Carbons = Data_Temp_Mod_CS["Carbons"].iloc[0].item()
+                Hydrogens = Data_Temp_Mod_CS["Hydrogens"].iloc[0].item()
+                Oxygens = Data_Temp_Mod_CS["Oxygens"].iloc[0].item()
+                Nitrogens = Data_Temp_Mod_CS["Nitrogens"].iloc[0].item()
+                Sulphurs = Data_Temp_Mod_CS["Sulphurs"].iloc[0].item()
 
-                    # Extract information
-                    TheoreticalMonoIsotopicMass = Data_Temp_CS_Mod["TheoreticalMonoIsotopicMass"].iloc[0].item()
-                    TheoreticalAverageMass = Data_Temp_CS_Mod["TheoreticalAverageMass"].iloc[0].item()
-                    TheoreticalMZ = Data_Temp_CS_Mod["TheoreticalMZ"].iloc[0].item()
-                    Carbons = Data_Temp_CS_Mod["Carbons"].iloc[0].item()
-                    Hydrogens = Data_Temp_CS_Mod["Hydrogens"].iloc[0].item()
-                    Oxygens = Data_Temp_CS_Mod["Oxygens"].iloc[0].item()
-                    Nitrogens = Data_Temp_CS_Mod["Nitrogens"].iloc[0].item()
-                    Sulphurs = Data_Temp_CS_Mod["Sulphurs"].iloc[0].item()
-
-                    # Temporary dictionary to store results in
-                    Temp_JSON_Dict_Modifications_To_append = {Modification_Dict: {
-                        "Ion Metadata": {
-                            "TheoreticalMonoIsotopicMass": TheoreticalMonoIsotopicMass,
-                            "TheoreticalAverageMass": TheoreticalAverageMass,
-                            "TheoreticalMZ": TheoreticalMZ,
-                            "Carbons": Carbons,
-                            "Hydrogens": Hydrogens,
-                            "Oxygens": Oxygens,
-                            "Nitrogens": Nitrogens,
-                            "Sulphurs": Sulphurs,
-                        }
+                # Temporary dictionary to store results in
+                Temp_JSON_Dict_Charge_States_To_append = {Charge_State: {
+                    "Ion Metadata": {
+                        "TheoreticalMonoIsotopicMass": TheoreticalMonoIsotopicMass,
+                        "TheoreticalAverageMass": TheoreticalAverageMass,
+                        "TheoreticalMZ": TheoreticalMZ,
+                        "Carbons": Carbons,
+                        "Hydrogens": Hydrogens,
+                        "Oxygens": Oxygens,
+                        "Nitrogens": Nitrogens,
+                        "Sulphurs": Sulphurs
                     }
-                    }
+                }
+                }
 
-                    # Start iterating over dataframe to acquire information
-                    for index in range(len(Data_Temp_CS_Mod)):
-                        # Extract all information
-                        Spectrum = Data_Temp_CS_Mod["Spectrum"].iloc[index]
-                        ObservedMZ = Data_Temp_CS_Mod["ObservedMZ"].iloc[index].item()
-                        RetentionTime = Data_Temp_CS_Mod["RetentionTime"].iloc[index].item()
-                        TIC = Data_Temp_CS_Mod["TIC"].iloc[index].item()
-                        Distribution = Data_Temp_CS_Mod["Distribution"].iloc[index]
-                        SpectralAngle = Data_Temp_CS_Mod["SpectralAngle"].iloc[index].item()
-                        NPeaks = Data_Temp_CS_Mod["NPeaks"].iloc[index].item()
-                        Consecutive_Peaks = Data_Temp_CS_Mod["ConsecutivePeaks"].iloc[index]
+                # Start iterating over dataframe to acquire information
+                for index in range(len(Data_Temp_Mod_CS)):
+                    # Extract all information
+                    Spectrum = Data_Temp_Mod_CS["Spectrum"].iloc[index]
+                    ObservedMZ = Data_Temp_Mod_CS["ObservedMZ"].iloc[0].item()
+                    RetentionTime = Data_Temp_Mod_CS["RetentionTime"].iloc[index].item()
+                    TIC = Data_Temp_Mod_CS["TIC"].iloc[index].item()
+                    Distribution = Data_Temp_Mod_CS["Distribution"].iloc[index]
+                    SpectralAngle = Data_Temp_Mod_CS["SpectralAngle"].iloc[index].item()
+                    NPeaks = Data_Temp_Mod_CS["NPeaks"].iloc[index].item()
+                    Consecutive_Peaks = Data_Temp_Mod_CS["ConsecutivePeaks"].iloc[index]
 
-                        # Store isotope distribution
-                        Isotope = {
-                            "MZ": {"IsotopePeak1MZ": Data_Temp_CS_Mod["IsotopePeak1MZ"].iloc[index].item(),
-                                   "IsotopePeak2MZ": Data_Temp_CS_Mod["IsotopePeak2MZ"].iloc[index].item(),
-                                   "IsotopePeak3MZ": Data_Temp_CS_Mod["IsotopePeak3MZ"].iloc[index].item(),
-                                   "IsotopePeak4MZ": Data_Temp_CS_Mod["IsotopePeak4MZ"].iloc[index].item(),
-                                   "IsotopePeak5MZ": Data_Temp_CS_Mod["IsotopePeak5MZ"].iloc[index].item(),
-                                   "IsotopePeak6MZ": Data_Temp_CS_Mod["IsotopePeak6MZ"].iloc[index].item()},
+                    # Store isotope distribution
+                    Isotope = {
+                            "MZ": {"IsotopePeak1MZ": Data_Temp_Mod_CS["IsotopePeak1MZ"].iloc[index].item(),
+                                   "IsotopePeak2MZ": Data_Temp_Mod_CS["IsotopePeak2MZ"].iloc[index].item(),
+                                   "IsotopePeak3MZ": Data_Temp_Mod_CS["IsotopePeak3MZ"].iloc[index].item(),
+                                   "IsotopePeak4MZ": Data_Temp_Mod_CS["IsotopePeak4MZ"].iloc[index].item(),
+                                   "IsotopePeak5MZ": Data_Temp_Mod_CS["IsotopePeak5MZ"].iloc[index].item(),
+                                   "IsotopePeak6MZ": Data_Temp_Mod_CS["IsotopePeak6MZ"].iloc[index].item()},
                             "Intensities": {
-                                "IsotopePeak1Intensity": Data_Temp_CS_Mod["IsotopePeak1Intensity"].iloc[index].item(),
-                                "IsotopePeak2Intensity": Data_Temp_CS_Mod["IsotopePeak2Intensity"].iloc[index].item(),
-                                "IsotopePeak3Intensity": Data_Temp_CS_Mod["IsotopePeak3Intensity"].iloc[index].item(),
-                                "IsotopePeak4Intensity": Data_Temp_CS_Mod["IsotopePeak4Intensity"].iloc[index].item(),
-                                "IsotopePeak5Intensity": Data_Temp_CS_Mod["IsotopePeak5Intensity"].iloc[index].item(),
-                                "IsotopePeak6Intensity": Data_Temp_CS_Mod["IsotopePeak6Intensity"].iloc[index].item()}}
+                                "IsotopePeak1Intensity": Data_Temp_Mod_CS["IsotopePeak1Intensity"].iloc[index].item(),
+                                "IsotopePeak2Intensity": Data_Temp_Mod_CS["IsotopePeak2Intensity"].iloc[index].item(),
+                                "IsotopePeak3Intensity": Data_Temp_Mod_CS["IsotopePeak3Intensity"].iloc[index].item(),
+                                "IsotopePeak4Intensity": Data_Temp_Mod_CS["IsotopePeak4Intensity"].iloc[index].item(),
+                                "IsotopePeak5Intensity": Data_Temp_Mod_CS["IsotopePeak5Intensity"].iloc[index].item(),
+                                "IsotopePeak6Intensity": Data_Temp_Mod_CS["IsotopePeak6Intensity"].iloc[index].item()}}
 
-                        # Store BRAIN Results
-                        BRAIN = {"BRAINRelativeIsotopePeak1Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak1Intensity"].iloc[index].item(),
-                                 "BRAINRelativeIsotopePeak2Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak2Intensity"].iloc[index].item(),
-                                 "BRAINRelativeIsotopePeak3Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak3Intensity"].iloc[index].item(),
-                                 "BRAINRelativeIsotopePeak4Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak4Intensity"].iloc[index].item(),
-                                 "BRAINRelativeIsotopePeak5Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak5Intensity"].iloc[index].item(),
-                                 "BRAINRelativeIsotopePeak6Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak6Intensity"].iloc[index].item()}
+                    # Store BRAIN Results
+                    BRAIN = {"BRAINRelativeIsotopePeak1Intensity":
+                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak1Intensity"].iloc[index].item(),
+                             "BRAINRelativeIsotopePeak2Intensity":
+                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak2Intensity"].iloc[index].item(),
+                             "BRAINRelativeIsotopePeak3Intensity":
+                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak3Intensity"].iloc[index].item(),
+                             "BRAINRelativeIsotopePeak4Intensity":
+                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak4Intensity"].iloc[index].item(),
+                             "BRAINRelativeIsotopePeak5Intensity":
+                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak5Intensity"].iloc[index].item(),
+                             "BRAINRelativeIsotopePeak6Intensity":
+                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak6Intensity"].iloc[index].item()}
 
-                        Temp_JSON_Dict_Modifications_To_append[Modification_Dict][Spectrum] = {
-                            "ObservedMZ": ObservedMZ,
-                            "RetentionTime": RetentionTime,
-                            "TIC": TIC,
-                            "Distribution": Distribution,
-                            "NPeaks": NPeaks,
-                            "ConsecutivePeaks": Consecutive_Peaks,
-                            "SpectralAngle": SpectralAngle,
-                            "IsotopeDistribution": Isotope,
-                            "BRAINDistribution": BRAIN
-                        }
-
-
-                else:
-                    # Filter the dataframe for the corresponding Modification in case of non-NA (Modification present)
-                    Data_Temp_CS_Mod = Data_Peptide_CS[Data_Peptide_CS["Modifications"] == Modification]
-
-                    # Modification string for dictionary
-                    Modification_Dict = f"Modification: {Modification}"
-
-                    # Extract information
-                    TheoreticalMonoIsotopicMass = Data_Temp_CS_Mod["TheoreticalMonoIsotopicMass"].iloc[0].item()
-                    TheoreticalAverageMass = Data_Temp_CS_Mod["TheoreticalAverageMass"].iloc[0].item()
-                    TheoreticalMZ = Data_Temp_CS_Mod["TheoreticalMZ"].iloc[0].item()
-                    Carbons = Data_Temp_CS_Mod["Carbons"].iloc[0].item()
-                    Hydrogens = Data_Temp_CS_Mod["Hydrogens"].iloc[0].item()
-                    Oxygens = Data_Temp_CS_Mod["Oxygens"].iloc[0].item()
-                    Nitrogens = Data_Temp_CS_Mod["Nitrogens"].iloc[0].item()
-                    Sulphurs = Data_Temp_CS_Mod["Sulphurs"].iloc[0].item()
-
-                    # Temporary dictionary to store results in
-                    Temp_JSON_Dict_Modifications_To_append = {Modification_Dict: {
-                        "Ion Metadata": {
-                            "TheoreticalMonoIsotopicMass": TheoreticalMonoIsotopicMass,
-                            "TheoreticalAverageMass": TheoreticalAverageMass,
-                            "TheoreticalMZ": TheoreticalMZ,
-                            "Carbons": Carbons,
-                            "Hydrogens": Hydrogens,
-                            "Oxygens": Oxygens,
-                            "Nitrogens": Nitrogens,
-                            "Sulphurs": Sulphurs,
-                        }
-                    }
+                    Temp_JSON_Dict_Charge_States_To_append[Charge_State][Spectrum] = {
+                        "ObservedMZ": ObservedMZ,
+                        "RetentionTime": RetentionTime,
+                        "TIC": TIC,
+                        "Distribution": Distribution,
+                        "NPeaks": NPeaks,
+                        "ConsecutivePeaks": Consecutive_Peaks,
+                        "SpectralAngle": SpectralAngle,
+                        "IsotopeDistribution": Isotope,
+                        "BRAINDistribution": BRAIN
                     }
 
-                    # Start iterating over dataframe to acquire information
-                    for index in range(len(Data_Temp_CS_Mod)):
-                        # Extract all information
-                        Spectrum = Data_Temp_CS_Mod["Spectrum"].iloc[index]
-                        ObservedMZ = Data_Temp_CS_Mod["ObservedMZ"].iloc[index].item()
-                        RetentionTime = Data_Temp_CS_Mod["RetentionTime"].iloc[index].item()
-                        TIC = Data_Temp_CS_Mod["TIC"].iloc[index].item()
-                        Distribution = Data_Temp_CS_Mod["Distribution"].iloc[index]
-                        SpectralAngle = Data_Temp_CS_Mod["SpectralAngle"].iloc[index].item()
-                        NPeaks = Data_Temp_CS_Mod["NPeaks"].iloc[index].item()
-                        Consecutive_Peaks = Data_Temp_CS_Mod["ConsecutivePeaks"].iloc[index]
 
-                        # Store isotope distribution
-                        Isotope = {
-                            "MZ": {"IsotopePeak1MZ": Data_Temp_CS_Mod["IsotopePeak1MZ"].iloc[index].item(),
-                                   "IsotopePeak2MZ": Data_Temp_CS_Mod["IsotopePeak2MZ"].iloc[index].item(),
-                                   "IsotopePeak3MZ": Data_Temp_CS_Mod["IsotopePeak3MZ"].iloc[index].item(),
-                                   "IsotopePeak4MZ": Data_Temp_CS_Mod["IsotopePeak4MZ"].iloc[index].item(),
-                                   "IsotopePeak5MZ": Data_Temp_CS_Mod["IsotopePeak5MZ"].iloc[index].item(),
-                                   "IsotopePeak6MZ": Data_Temp_CS_Mod["IsotopePeak6MZ"].iloc[index].item()},
-                            "Intensities": {
-                                "IsotopePeak1Intensity": Data_Temp_CS_Mod["IsotopePeak1Intensity"].iloc[index].item(),
-                                "IsotopePeak2Intensity": Data_Temp_CS_Mod["IsotopePeak2Intensity"].iloc[index].item(),
-                                "IsotopePeak3Intensity": Data_Temp_CS_Mod["IsotopePeak3Intensity"].iloc[index].item(),
-                                "IsotopePeak4Intensity": Data_Temp_CS_Mod["IsotopePeak4Intensity"].iloc[index].item(),
-                                "IsotopePeak5Intensity": Data_Temp_CS_Mod["IsotopePeak5Intensity"].iloc[index].item(),
-                                "IsotopePeak6Intensity": Data_Temp_CS_Mod["IsotopePeak6Intensity"].iloc[index].item()}}
+                Temp_JSON_Dict_Charge_States.update(Temp_JSON_Dict_Charge_States_To_append)
 
-                        # Store BRAIN Results
-                        BRAIN = {"BRAINRelativeIsotopePeak1Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak1Intensity"].iloc[index].item(),
-                                 "BRAINRelativeIsotopePeak2Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak2Intensity"].iloc[index].item(),
-                                 "BRAINRelativeIsotopePeak3Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak3Intensity"].iloc[index].item(),
-                                 "BRAINRelativeIsotopePeak4Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak4Intensity"].iloc[index].item(),
-                                 "BRAINRelativeIsotopePeak5Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak5Intensity"].iloc[index].item(),
-                                 "BRAINRelativeIsotopePeak6Intensity":
-                                     Data_Temp_CS_Mod["BRAINRelativeIsotopePeak6Intensity"].iloc[index].item()}
-
-                        Temp_JSON_Dict_Modifications_To_append[Modification_Dict][Spectrum] = {
-                            "ObservedMZ": ObservedMZ,
-                            "RetentionTime": RetentionTime,
-                            "TIC": TIC,
-                            "Distribution": Distribution,
-                            "NPeaks": NPeaks,
-                            "ConsecutivePeaks": Consecutive_Peaks,
-                            "SpectralAngle": SpectralAngle,
-                            "IsotopeDistribution": Isotope,
-                            "BRAINDistribution": BRAIN
-                        }
-
-                Temp_JSON_Dict_Modifications.update(Temp_JSON_Dict_Modifications_To_append)
-
-            Temp_JSON_Dict_CS[Charge_State_Dict] = Temp_JSON_Dict_Modifications
+            Temp_JSON_Dict_Mod[Modification_Dict] = {"Charge State": Temp_JSON_Dict_Charge_States}
 
         # Have to add to the final JSON after each iteration
-        JSON_Dict[Peptide].update(Temp_JSON_Dict_CS)
+        JSON_Dict[Peptide] = {"Peptide Metadata": {"Peptide Length": PeptideLength},
+                              "Modifications" : Temp_JSON_Dict_Mod}
 
     # Serializing json
     Final_Dict = {"Peptides": JSON_Dict}
