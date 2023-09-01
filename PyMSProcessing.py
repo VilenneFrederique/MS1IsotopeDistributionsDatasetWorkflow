@@ -620,6 +620,20 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                 Nitrogens = Data_Temp_Mod_CS["Nitrogens"].iloc[0].item()
                 Sulphurs = Data_Temp_Mod_CS["Sulphurs"].iloc[0].item()
 
+                # Store BRAIN Results
+                BRAIN = {"BRAINRelativeIsotopePeak1Intensity":
+                             Data_Temp_Mod_CS["BRAINRelativeIsotopePeak1Intensity"].iloc[0].item(),
+                         "BRAINRelativeIsotopePeak2Intensity":
+                             Data_Temp_Mod_CS["BRAINRelativeIsotopePeak2Intensity"].iloc[0].item(),
+                         "BRAINRelativeIsotopePeak3Intensity":
+                             Data_Temp_Mod_CS["BRAINRelativeIsotopePeak3Intensity"].iloc[0].item(),
+                         "BRAINRelativeIsotopePeak4Intensity":
+                             Data_Temp_Mod_CS["BRAINRelativeIsotopePeak4Intensity"].iloc[0].item(),
+                         "BRAINRelativeIsotopePeak5Intensity":
+                             Data_Temp_Mod_CS["BRAINRelativeIsotopePeak5Intensity"].iloc[0].item(),
+                         "BRAINRelativeIsotopePeak6Intensity":
+                             Data_Temp_Mod_CS["BRAINRelativeIsotopePeak6Intensity"].iloc[0].item()}
+
                 # Temporary dictionary to store results in
                 Temp_JSON_Dict_Charge_States_To_append = {Charge_State: {
                     "Ion Metadata": {
@@ -630,7 +644,8 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                         "Hydrogens": Hydrogens,
                         "Oxygens": Oxygens,
                         "Nitrogens": Nitrogens,
-                        "Sulphurs": Sulphurs
+                        "Sulphurs": Sulphurs,
+                        "BRAINDistribution": BRAIN
                     }
                 }
                 }
@@ -663,19 +678,7 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                                 "IsotopePeak5Intensity": Data_Temp_Mod_CS["IsotopePeak5Intensity"].iloc[index].item(),
                                 "IsotopePeak6Intensity": Data_Temp_Mod_CS["IsotopePeak6Intensity"].iloc[index].item()}}
 
-                    # Store BRAIN Results
-                    BRAIN = {"BRAINRelativeIsotopePeak1Intensity":
-                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak1Intensity"].iloc[index].item(),
-                             "BRAINRelativeIsotopePeak2Intensity":
-                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak2Intensity"].iloc[index].item(),
-                             "BRAINRelativeIsotopePeak3Intensity":
-                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak3Intensity"].iloc[index].item(),
-                             "BRAINRelativeIsotopePeak4Intensity":
-                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak4Intensity"].iloc[index].item(),
-                             "BRAINRelativeIsotopePeak5Intensity":
-                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak5Intensity"].iloc[index].item(),
-                             "BRAINRelativeIsotopePeak6Intensity":
-                                 Data_Temp_Mod_CS["BRAINRelativeIsotopePeak6Intensity"].iloc[index].item()}
+
 
                     Temp_JSON_Dict_Charge_States_To_append[Charge_State][Spectrum] = {
                         "ObservedMZ": ObservedMZ,
@@ -685,8 +688,7 @@ def JSON_MS1_Isotope_Distributions(raw_file, input_list, output_file):
                         "NPeaks": NPeaks,
                         "ConsecutivePeaks": Consecutive_Peaks,
                         "SpectralAngle": SpectralAngle,
-                        "IsotopeDistribution": Isotope,
-                        "BRAINDistribution": BRAIN
+                        "IsotopeDistribution": Isotope
                     }
 
 
